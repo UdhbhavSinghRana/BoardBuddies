@@ -1,7 +1,45 @@
 import React, { useState, useRef, useEffect } from "react";
 import Word from './Word';
 import Color from './Color';
+import firebaseConfig from '../firebaseConfig'
+import { initializeApp } from 'firebase/app'
+import 'firebase/database';
+import { getDatabase, ref } from 'firebase/database'
+import { get, query, onValue } from "firebase/database"
+import { set, update } from "firebase/database"
+
 function Canvas() { 
+  const [xaxis, setXaxis] = useState(null);
+  const [yaxis,setYaxis] = useState(null);
+  const app = initializeApp(firebaseConfig);
+  const database = getDatabase(app);
+  const dbRef = ref(database, 'x');
+
+  async function getData() {
+    const snapshot = await get(query(dbRef));
+    console.log(snapshot.val().x);
+  }
+  useEffect(() => {
+    getData();
+  }, [])
+  async function updateData(e) {
+    e.preventDefault();
+    console.log(dbRef);
+    await update(dbRef, {
+        'x': xaxis,
+        'y': yaxis
+    })  
+    getData();
+  }
+  async function updateData2(e) {
+    e.preventDefault();
+
+    await update(dbRef, {
+        'x': xaxis,
+        'y': yaxis
+    })
+    getData();
+  }
     const canvasRef = useRef(null);
     const [painting,setPainting] = useState(false);
     const [lineThickness, setLineThickness] = useState(10);
@@ -23,16 +61,21 @@ function Canvas() {
         ctx.lineWidth = lineThickness;
         ctx.lineCap = 'round';
         ctx.strokeStyle = color;
-        ctx.lineTo(e.clientX-bound.left,e.clientY-bound.top);
+        ctx.lineTo(xaxis,yaxis);
         ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(e.clientX-bound.left,e.clientY-bound.top);
+        ctx.moveTo(xaxis,yaxis);
+        setXaxis(e.clientX-bound.left);
+        setYaxis(e.clientY-bound.top);
+        updateData(e);
         console.log(e.clientX-bound.left,e.clientY-bound.top);
     }
     function over(){
         setPainting(false);
         const canvas = canvasRef.current;
         const ctx = canvas.getContext("2d");
+        setXaxis(null);
+        setYaxis(null);
         ctx.beginPath();
     }
     function FullColor(){

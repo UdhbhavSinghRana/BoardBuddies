@@ -4,6 +4,7 @@ import Lobby from './Lobby'
 import ChatRoom from './ChatRoom'
 import Word from './Word'
 
+
 function Home() {
   document.getElementById('root').className="h-screen "
   return (
